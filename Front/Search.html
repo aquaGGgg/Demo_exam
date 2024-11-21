@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button {
+            margin: 5px 0;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <div>
+        <a href="getOrders.html">Получить заявки</a>
+        <a href="addOrders.html">Добавить заявки</a>
+        <a href="putOrders.html">Изменить заявки</a>
+        <a href="getStats.html">Получить статистику</a>
+        <a href="Search.html">Поиск</a>
+        <a href="home.html">Дом</a>
+    </div>
+
+    <h1>Поиск</h1>
+
+    <div>
+        <h2>Поиск по номеру</h2>
+        <input type="number" id="searchNum" placeholder="Введите номер" />
+        <button onclick="searchByNumber()">Search</button>
+        <pre id="resultNum"></pre>
+    </div>
+
+    <div>
+        <h2>Поиск по фильтру</h2>
+        <input type="text" id="searchFilter" placeholder="Введите свое имя, номер телефона, пожелания, адрес, квартиру или администратора" />
+        <button onclick="searchByFilter()">Search</button>
+        <pre id="resultFilter"></pre>
+    </div>
+
+    <script>
+        const apiUrl = 'http://localhost:5203';
+
+        async function searchByNumber() {
+            const num = document.getElementById('searchNum').value;
+            const response = await fetch(`${apiUrl}/${num}`);
+            const data = await response.json();
+            document.getElementById('resultNum').innerText = JSON.stringify(data, null, 2);
+        }
+
+        async function searchByFilter() {
+            const param = document.getElementById('searchFilter').value;
+            const response = await fetch(`${apiUrl}/filter/${param}`);
+            const data = await response.json();
+            document.getElementById('resultFilter').innerText = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>

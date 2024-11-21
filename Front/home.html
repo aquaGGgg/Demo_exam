@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        p {
+            font-size: 18px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <h1>Добро пожаловать!</h1>
+    <p id="welcomeMessage">Вы успешно вошли в систему.</p>
+    <button id="logoutButton">Выйти</button>
+
+    <div>
+        <a href="getOrders.html">Получить заявки</a>
+        <a href="addOrders.html">Добавить заявки</a>
+        <a href="putOrders.html">Изменить заявки</a>
+        <a href="getStats.html">Получить статистику</a>
+        <a href="Search.html">Поиск</a>
+    </div>
+
+    <script>
+        // Получаем токен из localStorage
+        const token = localStorage.getItem('authToken');
+        
+        // Если токена нет, перенаправляем на страницу логина
+        if (!token) {
+            window.location.href = '/login.html';
+        } else {
+            // Если токен есть, показываем приветствие
+            document.getElementById('welcomeMessage').innerText = `Вы успешно вошли в систему с токеном: ${token}`;
+        }
+
+        // Обработчик для выхода
+        document.getElementById('logoutButton').addEventListener('click', function() {
+            // Удаляем токен из localStorage
+            localStorage.removeItem('authToken');
+            // Перенаправляем на страницу логина
+            window.location.href = '/login.html';
+        });
+    </script>
+</body>
+</html>

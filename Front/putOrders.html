@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактирование</title>
+</head>
+<body>
+    <div>
+        <a href="getOrders.html">Получить заявки</a>
+        <a href="addOrders.html">Добавить заявки</a>
+        <a href="putOrders.html">Изменить заявки</a>
+        <a href="getStats.html">Получить статистику</a>
+        <a href="Search.html">Поиск</a>
+        <a href="home.html">Дом</a>
+    </div>
+    <table>
+        <tr>
+            <th>Номер</th>
+            <th>Дата заезда</th>
+            <th>Дата выезда</th>
+            <th>Пожелания</th>
+            <th>Действие</th>
+        </tr>
+        <tr>
+            <td><input id="number" placeholder="Номер" /></td>
+            <td><input id="CheckInDate" type="date" placeholder="Дата заезда" /></td>
+            <td><input id="CheckOutDate" type="date" placeholder="Дата выезда" /></td>
+            <td><input id="AdditionalWishes" placeholder="Дополнительные Пожелания" /></td>
+            <td><input id="сохранить" value="Сохранить" type="button" /></td>
+        </tr>
+    </table>
+    <script>
+            document.getElementById("сохранить").onclick = async () => {
+                let number = document.getElementById("number").value;
+                let order = {
+                    CheckInDate: document.getElementById("CheckInDate").value,
+                    CheckOutDate: document.getElementById("CheckOutDate").value,
+                    AdditionalWishes: document.getElementById("AdditionalWishes").value,
+                };
+
+
+                    const response = await fetch(`http://localhost:5203/${number}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(order)
+        });
+    }
+    </script>
+</body>
+</html>

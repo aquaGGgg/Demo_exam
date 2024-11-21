@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Заявки</title>
+</head>
+<body>
+    <div>
+        <a href="getOrders.html">Получить заявки</a>
+        <a href="addOrders.html">Добавить заявки</a>
+        <a href="putOrders.html">Изменить заявки</a>
+        <a href="getStats.html">Получить статистику</a>
+        <a href="Search.html">Поиск</a>
+        <a href="home.html">Дом</a>
+    </div>
+    <table>
+        <tr>
+            <th>Номер</th>
+            <th>Имя</th>
+            <th>Номер телефона</th>
+            <th>Пожелания</th>
+            <th>Адрес</th>
+            <th>Номер в отеле</th>
+            <th>Дата заезда</th>
+            <th>Дата выезда</th>
+            <th>Доп. пожелания</th>
+            <th>Админ</th>
+        </tr>
+    </table>
+    <script>
+        let table = document.querySelector("table");
+        GetOrders();
+
+        async function GetOrders() {
+            
+                let response = await fetch("http://localhost:5203/", { method: "GET" });
+                let orders = await response.json();
+
+                orders.forEach(o => {
+                    let tr = document.createElement("tr");
+
+                    tr.append(CreateTd(o.num));
+                    tr.append(CreateTd(o.name));
+                    tr.append(CreateTd(o.num_tel));
+                    tr.append(CreateTd(o.wishes));
+                    tr.append(CreateTd(o.address));
+                    tr.append(CreateTd(o.apartmentNumber));
+                    tr.append(CreateTd(o.checkInDate ? o.checkInDate.substring(0, 10) : "не указана"));
+                    tr.append(CreateTd(o.checkOutDate ? o.checkOutDate.substring(0, 10) : "не выехал"));
+                    tr.append(CreateTd(o.additionalWishes));
+                    tr.append(CreateTd(o.admin));
+
+                    table.append(tr); 
+                });
+        }
+
+        function CreateTd(data) {
+            let td = document.createElement("td");
+            td.innerText = data || "не указано"; // Если данные не указаны, выводим "не указано"
+            return td;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавление заявки</title>
+</head>
+<body>
+    <div>
+        <a href="getOrders.html">Получить заявки</a>
+        <a href="addOrders.html">Добавить заявки</a>
+        <a href="putOrders.html">Изменить заявки</a>
+        <a href="getStats.html">Получить статистику</a>
+        <a href="Search.html">Поиск</a>
+        <a href="home.html">Дом</a>
+    </div>
+    <table>
+        <tr>
+            <th>Номер</th>
+            <th>Имя</th>
+            <th>Номер телефона</th>
+            <th>Пожелания</th>
+            <th>Адрес</th>
+            <th>Номер в отеле</th>
+            <th>Дата заезда</th>
+            <th>Дата выезда</th>
+            <th>Администратор</th>
+        </tr>
+        <tr>
+            <td><input id="num" placeholder="Номер"/></td>
+            <td><input id="name" placeholder="Имя"/></td>
+            <td><input id="num_tel" placeholder="Номер телефона"/></td>
+            <td><input id="wishes" placeholder="Пожелания"/></td>
+            <td><input id="address" placeholder="Адрес"/></td>
+            <td><input id="apartmentNumber" placeholder="Номер в отеле"/></td>
+            <td><input id="checkInDate" placeholder="Дата заезда" type="datetime-local"/></td>
+            <td><input id="checkOutDate" placeholder="Дата выезда" type="datetime-local"/></td>
+            <td><input id="admin" placeholder="Администратор"/></td>
+            <td><input id="save" value="Сохранить" type="button"></td>
+        </tr>
+    </table>
+    <script>
+        document.getElementById("save").onclick = async () => {
+            let order = {
+                num: parseInt(document.getElementById("num").value),
+                name: document.getElementById("name").value,
+                num_tel: document.getElementById("num_tel").value,
+                wishes: document.getElementById("wishes").value,
+                address: document.getElementById("address").value,
+                apartmentNumber: document.getElementById("apartmentNumber").value,
+                checkInDate: document.getElementById("checkInDate").value,
+                checkOutDate: document.getElementById("checkOutDate").value,
+                additionalWishes: "",
+                admin: document.getElementById("admin").value
+            };
+
+           {
+                let response = await fetch("http://localhost:5203/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(order)
+                });
+           }
+        };
+    </script>
+</body>
+</html>

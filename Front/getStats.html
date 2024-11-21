@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статистика заявок</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <a href="getOrders.html">Получить заявки</a>
+        <a href="addOrders.html">Добавить заявки</a>
+        <a href="putOrders.html">Изменить заявки</a>
+        <a href="getStats.html">Получить статистику</a>
+        <a href="Search.html">Поиск</a>
+        <a href="home.html">Дом</a>
+    </div>
+
+    <h1>Статистика заявок</h1>
+    <button id="getStats">Получить статистику</button>
+
+    <h2>Количество завершенных заявок</h2>
+    <div id="completedCount"></div>
+
+    <h2>Среднее время проживания</h2>
+    <div id="averageStay"></div>
+
+    <h2>Статистика по частоте заселения номеров</h2>
+    <table id="occupancyTable">
+        <thead>
+            <tr>
+                <th>Номер апартаментов</th>
+                <th>Количество заселений</th>
+            </tr>
+        </thead>
+        <tbody id="occupancyBody">
+        </tbody>
+    </table>
+
+    <script>
+        document.getElementById("getStats").onclick = async () => {
+            
+                const completedResponse = await fetch("http://localhost:5203/stats/completed");
+                const completedCount = await completedResponse.json();
+                document.getElementById("completedCount").innerText = completedCount;
+
+                const averageResponse = await fetch("http://localhost:5203/stats/average-stay");
+                const averageStay = await averageResponse.json();
+                document.getElementById("averageStay").innerText = averageStay.toFixed(2) + " дней";
+
+                const occupancyResponse = await fetch("http://localhost:5203/stats/occupancy");
+                const occupancyStats = await occupancyResponse.json();
+                const occupancyBody = document.getElementById("occupancyBody");
+                occupancyBody.innerHTML = ""; 
+
+                occupancyStats.forEach(stat => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `<td>${stat.apartmentNumber}</td><td>${stat.count}</td>`;
+                    occupancyBody.appendChild(row);
+                });
+            
+        };
+    </script>
+</body>
+</html>
