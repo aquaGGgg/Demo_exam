@@ -5,8 +5,9 @@ using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Test_Demo_Ex.Models;
-using Test_Demo_Ex.Repository;
 using Test_Demo_Ex.Service;
+using Microsoft.EntityFrameworkCore;
+using Test_Demo_Ex.Data;
 
 
 
@@ -14,6 +15,9 @@ var jwtSecret = "k9Sxxy+qgx8GjbhZbqVLO2V5lLOklDJhY7J5vIRjYlI="; // Миниму�
 var jwtExpirationMinutes = 60;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddCors(options =>
 {
@@ -26,7 +30,6 @@ builder.Services.AddCors(options =>
 });
     
 
-builder.Services.AddSingleton(new UserRepository());
 builder.Services.AddSingleton(new JwtService(jwtSecret, jwtExpirationMinutes));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -48,21 +51,29 @@ var app = builder.Build();
 
 app.UseCors("AllowAll");
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
+
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-List<Order> repo = new List<Order>()
-{
-    //new order(1, "Èâàí Èâàíîâ", "1234567890", "Íèêàêèõ ïîæåëàíèé", "Ìîñêâà, óë. Ïóøêèíà, ä. 1", "101" ,DateTime.Now, DateTime.Now.AddDays(1), "Ïðèìåð ïîæåëàíèÿ", "Àäìèíèñòðàòîð 1")
-};
+app.MapGet("/", async (ApplicationDbContext db) =>
+    await db.Orders.ToListAsync());
 
-app.MapGet("/", () => repo);
-app.MapPost("/", (Order o) => repo.Add(o));
-
-app.MapPut("/{id}", (int id, OrderUpdateDTO dto) =>
+app.MapPost("/", async (Order o, ApplicationDbContext db) =>
 {
-    var existingOrder = repo.FirstOrDefault(o => o.Num == id);
+    db.Orders.Add(o);
+    await db.SaveChangesAsync();
+    return Results.Ok(o);
+});
+
+app.MapPut("/{id}", async (int id, OrderUpdateDTO dto, ApplicationDbContext db) =>
+{
+    var existingOrder = await db.Orders.FirstOrDefaultAsync(o => o.Num == id);
     if (existingOrder is null)
     {
         return Results.NotFound();
@@ -73,70 +84,111 @@ app.MapPut("/{id}", (int id, OrderUpdateDTO dto) =>
         existingOrder.CheckOutDate = dto.CheckOutDate.Value;
     if (!string.IsNullOrEmpty(dto.AdditionalWishes))
         existingOrder.AdditionalWishes = dto.AdditionalWishes;
+
+    await db.SaveChangesAsync();
     return Results.Ok(existingOrder);
 });
-app.MapGet("/{num}", (int num) => repo.Find(o => o.Num == num));
-app.MapGet("/filter/{param}", (string param) => repo.FindAll(o =>
-    o.Name == param ||
-    o.Num_tel == param ||
-    o.Wishes == param ||
-    o.Address == param ||
-    o.ApartmentNumber == param ||
-    o.Admin == param));
 
-app.MapGet("/stats/completed", () =>
+app.MapGet("/{num}", async (int num, ApplicationDbContext db) =>
+    await db.Orders.FindAsync(num));
+
+app.MapGet("/filter/{param}", async (string param, ApplicationDbContext db) =>
 {
-    var completedOrders = repo.Count(o => o.CheckOutDate < DateTime.Now);
+    var orders = await db.Orders
+        .Where(o => o.Name == param ||
+                    o.Num_tel == param ||
+                    o.Wishes == param ||
+                    o.Address == param ||
+                    o.ApartmentNumber == param ||
+                    o.Admin == param)
+        .ToListAsync();
+    return Results.Json(orders);
+});
+
+app.MapGet("/stats/completed", async (ApplicationDbContext db) =>
+{
+    var completedOrders = await db.Orders.CountAsync(o => o.CheckOutDate < DateTime.Now);
     return Results.Json(completedOrders);
 });
 
-app.MapGet("/stats/average-stay", () =>
+app.MapGet("/stats/average-stay", async (ApplicationDbContext db) =>
 {
-    var completedOrders = repo.Where(o => o.CheckOutDate < DateTime.Now && o.CheckOutDate > o.CheckInDate);
-    double averageStay = completedOrders.Any() ? completedOrders.Average(o => (o.CheckOutDate - o.CheckInDate).TotalDays) : 0;
+    var completedOrders = await db.Orders
+        .Where(o => o.CheckOutDate < DateTime.Now && o.CheckOutDate > o.CheckInDate)
+        .ToListAsync();
+    double averageStay = completedOrders.Any()
+        ? completedOrders.Average(o => (o.CheckOutDate - o.CheckInDate).TotalDays)
+        : 0;
     return Results.Json(averageStay);
 });
 
-app.MapGet("/stats/occupancy", () =>
+app.MapGet("/stats/occupancy", async (ApplicationDbContext db) =>
 {
-    var occupancyStats = repo.GroupBy(o => o.ApartmentNumber)
-                             .Select(g => new { ApartmentNumber = g.Key, Count = g.Count() })
-                             .ToList();
+    var occupancyStats = await db.Orders
+        .GroupBy(o => o.ApartmentNumber)
+        .Select(g => new { ApartmentNumber = g.Key, Count = g.Count() })
+        .ToListAsync();
     return Results.Json(occupancyStats);
 });
 
 
 // Регистрация
-app.MapPost("/register", (UserRegisterDTO dto, UserRepository repo) =>
+app.MapPost("/register", async (UserRegisterDTO dto, ApplicationDbContext db) =>
 {
-    if (repo.GetUserByUsername(dto.Username) != null)
+    // Проверка наличия пользователя с таким же именем
+    if (await db.Users.AnyAsync(u => u.Username == dto.Username))
+    {
         return Results.BadRequest("Пользователь с таким именем уже существует.");
+    }
 
+    // Хэшируем пароль
     var passwordHash = HashPassword(dto.Password);
+
+    // Создаем нового пользователя
     var user = new User
     {
         Username = dto.Username,
         PasswordHash = passwordHash
     };
 
-    repo.AddUser(user);
+    // Добавляем пользователя в базу данных
+    db.Users.Add(user);
+    await db.SaveChangesAsync();
+
     return Results.Ok("Регистрация прошла успешно.");
 });
 
 // Логин
-app.MapPost("/login", (UserLoginDTO dto, UserRepository repo, JwtService jwt) =>
+app.MapPost("/login", async (UserLoginDTO dto, ApplicationDbContext db, JwtService jwt) =>
 {
-    var user = repo.GetUserByUsername(dto.Username);
-    if (user == null || !VerifyPassword(dto.Password, user.PasswordHash))
-        return Results.Unauthorized();
+    // Поиск пользователя по имени
+    var user = await db.Users.FirstOrDefaultAsync(u => u.Username == dto.Username);
+    if (user == null)
+    {
+        // Если пользователь не найден
+        return Results.Json(new { Message = "Неверное имя пользователя или пароль." }, statusCode: 401);
+    }
 
+    // Проверка пароля
+    if (!VerifyPassword(dto.Password, user.PasswordHash))
+    {
+        // Если пароль неверный
+        return Results.Json(new { Message = "Неверное имя пользователя или пароль." }, statusCode: 401);
+    }
+
+    // Генерация JWT токена
     var token = jwt.GenerateToken(user.Id, user.Role);
-    return Results.Json(new { Token = token });
+
+    // Возвращаем токен в ответе
+    return Results.Json(new
+    {
+        Message = "Авторизация успешна.",
+        Token = token,
+        Username = user.Username,
+        Role = user.Role
+    });
 });
 
-// Пример защищённого маршрута
-app.MapGet("/secure", () => "Добро пожаловать в защищённую область!")
-    .RequireAuthorization();
 
 app.Run();
 

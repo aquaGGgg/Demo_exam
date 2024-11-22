@@ -1,18 +1,9 @@
-﻿namespace Test_Demo_Ex.Models
-{
-    class Order
-    {
-        int num;
-        string name;
-        string num_tel;
-        string wishes;
-        string address;
-        string apartmentNumber;
-        DateTime checkInDate;
-        DateTime checkOutDate;
-        string additionalWishes;
-        string admin;
+﻿using System.ComponentModel.DataAnnotations;
 
+namespace Test_Demo_Ex.Models
+{
+    public class Order
+    {
         public Order(int num, string name, string num_tel, string wishes, string address, string apartmentNumber, DateTime checkInDate, DateTime checkOutDate, string additionalWishes, string admin)
         {
             Num = num;
@@ -27,18 +18,28 @@
             Admin = admin;
         }
 
-        public int Num { get => num; set => num = value; }
-        public string Name { get => name; set => name = value; }
-        public string Num_tel { get => num_tel; set => num_tel = value; }
-        public string Wishes { get => wishes; set => wishes = value; }
-        public string Address { get => address; set => address = value; }
-        public string ApartmentNumber { get => apartmentNumber; set => apartmentNumber = value; }
-        public DateTime CheckInDate { get => checkInDate; set => checkInDate = value; }
-        public DateTime CheckOutDate { get => checkOutDate; set => checkOutDate = value; }
-        public string AdditionalWishes { get => additionalWishes; set => additionalWishes = value; }
-        public string Admin { get => admin; set => admin = value; }
+        [Key]
+        public int Num { get; set; }
+
+        [Required]
+        public string Name { get; set; }
+
+        public string Num_tel { get; set; }
+        public string Wishes { get; set; }
+        public string Address { get; set; }
+        public string ApartmentNumber { get; set; }
+
+        [Required]
+        public DateTime CheckInDate { get; set; }
+
+        [Required]
+        public DateTime CheckOutDate { get; set; }
+
+        public string AdditionalWishes { get; set; }
+        public string Admin { get; set; }
 
         public double TimeInDay() => (CheckOutDate - CheckInDate).TotalDays;
+
 
     }
 }
