@@ -3,7 +3,7 @@
 namespace Test_Demo_Ex.Models
 {
     public class Order
-    {
+    { 
         public Order(int num, string name, string num_tel, string wishes, string address, string apartmentNumber, DateTime checkInDate, DateTime checkOutDate, string additionalWishes, string admin)
         {
             Num = num;
@@ -17,6 +17,8 @@ namespace Test_Demo_Ex.Models
             AdditionalWishes = additionalWishes;
             Admin = admin;
         }
+
+        public Order() { }
 
         [Key]
         public int Num { get; set; }

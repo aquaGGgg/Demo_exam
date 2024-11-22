@@ -2,8 +2,6 @@
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
 using System.Text;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using Test_Demo_Ex.Models;
 using Test_Demo_Ex.Service;
 using Microsoft.EntityFrameworkCore;
