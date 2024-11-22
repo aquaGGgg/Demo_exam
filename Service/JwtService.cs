@@ -40,5 +40,5 @@ namespace Test_Demo_Ex.Service
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-    }
+        }
 }

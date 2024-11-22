@@ -5,6 +5,8 @@ using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Test_Demo_Ex.Models;
+using Test_Demo_Ex.Repository;
+using Test_Demo_Ex.Service;
 
 
 
@@ -150,65 +152,4 @@ static string HashPassword(string password)
 static bool VerifyPassword(string password, string storedHash)
 {
     return HashPassword(password) == storedHash;
-}
-
-public class UserRepository
-{
-    private readonly List<User> _users = new();
-
-    public User? GetUserByUsername(string username) =>
-        _users.FirstOrDefault(u => u.Username == username);
-
-    public void AddUser(User user) => _users.Add(user);
-}
-
-public class User
-{
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public string Username { get; set; } = string.Empty;
-    public string PasswordHash { get; set; } = string.Empty; // Пароль в виде хэша
-    public string Role { get; set; } = "User"; // По умолчанию роль "User"
-}
-
-public class UserRegisterDTO
-{
-    public string Username { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-}
-
-public class UserLoginDTO
-{
-    public string Username { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-}
-
-public class JwtService
-{
-    private readonly string _secret;
-    private readonly int _accessTokenExpirationMinutes;
-
-    public JwtService(string secret, int accessTokenExpirationMinutes)
-    {
-        _secret = secret;
-        _accessTokenExpirationMinutes = accessTokenExpirationMinutes;
-    }
-
-    public string GenerateToken(Guid userId, string role)
-    {
-        var claims = new[] {
-            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()), // Уникальный идентификатор пользователя
-            new Claim(ClaimTypes.Role, role), // Роль пользователя
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) // Идентификатор токена
-        };
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(_accessTokenExpirationMinutes),
-            signingCredentials: creds);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
 }
